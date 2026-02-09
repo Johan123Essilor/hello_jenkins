@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_USER = 'zahit18' 
+        IMAGE_NAME = 'hellojenkins'
+    }
+
+    stages {
+        stage('Checkout GitHub repo') {
+            steps {
+                checkout scmGit(branches: [[name: '*/main']], 
+                extensions: [], 
+                userRemoteConfigs: [[url: 'https://github.com/Johan123Essilor/hello_jenkins']]) 
+            }
+        }
+
+        stage('Build and Tag Docker Image') {
+            steps {
+                script {
+                    sh "docker build . -t ${DOCKERHUB_USER}/${IMAGE_NAME}:latest"
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'docker_hub', variable: 'DOCKER_PASS')]) {
+                        sh "docker login -u ${DOCKERHUB_USER} -p ${DOCKER_PASS}"
+                        sh "docker push ${DOCKERHUB_USER}/${IMAGE_NAME}:latest"
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                withKubeConfig([credentialsId: 'kubernetes_config']) {
+                    script {
+                        sh 'kubectl apply -f deploymentsvc.yaml'
+                        sh "kubectl set image deployment/hellojenkins-deployment hellojenkins-container=${DOCKERHUB_USER}/${IMAGE_NAME}:latest"
+                        sh 'kubectl get pods'
+                        sh 'kubectl get svc'
+                    }
+                }
+            }
+        }
+    }
+}
