@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hellodocker-deployment
+  name: hello-jenkins-deployment  # ← CORREGIDO
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: hellodocker-deployment
+      app: hello-jenkins
   template:
     metadata:
       labels:
-        app: hellodocker-deployment
+        app: hello-jenkins
     spec:
       containers:
-      - name: hellodocker-deployment
-        image: jamesndubuisi/hellodocker
+      - name: hello-jenkins-container  # ← CORREGIDO
+        image: onumonk/hello_jenkins:latest  # ← TU IMAGEN
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
@@ -23,10 +23,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: hellodocker-service
+  name: hello-jenkins-service  # ← CORREGIDO
 spec:
   selector:
-    app: hellodocker-deployment
+    app: hello-jenkins  # ← DEBE COINCIDIR CON EL DEPLOYMENT
   ports:
   - protocol: TCP
     port: 80
